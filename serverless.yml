@@ -1,0 +1,175 @@
+# serverless.yml
+service: ampstack-api
+frameworkVersion: '3'
+ 
+# Configuration validation: 'error' (fatal error), 'warn' (logged to the output) or 'off' (default: warn)
+# See https://www.serverless.com/framework/docs/configuration-validation
+configValidationMode: error
+# Load environment variables from .env files (default: false)
+# See https://www.serverless.com/framework/docs/environment-variables
+useDotenv: true
+
+plugins:
+  - serverless-dynamodb
+  - serverless-offline
+custom:
+  serverless-dynamodb:
+    port: 8000
+    docker: false
+    start:
+      migrate: true
+    stages:
+      - dev
+  usersTableName: 'users-${self:provider.stage}'
+  quotesTableName: 'quotes-${self:provider.stage}'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  profile: default
+  apiGateway:
+    usagePlan:
+      quota:
+        limit: 1000
+        period: DAY
+      throttle:
+        rateLimit: 100
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - { "Fn::GetAtt": ["UsersDynamoDBTable", "Arn" ] }
+            - { "Fn::GetAtt": ["QuotesDynamoDBTable", "Arn" ] }
+  environment:
+    USERS_TABLE: ${self:custom.usersTableName}
+    QUOTES_TABLE: ${self:custom.quotesTableName}
+    COGNITO_ARN: ${env:COGNITO_ARN}
+    ALLOW_ORIGIN: ${env:ALLOW_ORIGIN}
+  deploymentPrefix: ampstack
+
+functions:
+  express:
+    handler: api.handler
+    events:
+      - http:
+          path: '/users/{proxy+}'
+          method: get
+          authorizer:
+            type: COGNITO_USER_POOLS
+            arn: ${env:COGNITO_ARN}
+          cors:
+            origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http: 
+          path: '/users'
+          method: post
+          authorizer:
+            type: COGNITO_USER_POOLS
+            arn: ${env:COGNITO_ARN}
+          cors:
+            origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http:
+          path: '/quotes/{proxy+}'
+          method: get
+          authorizer:
+            type: COGNITO_USER_POOLS
+            arn: ${env:COGNITO_ARN}
+          cors:
+            origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http: 
+          path: '/quotes'
+          method: post
+          authorizer:
+            type: COGNITO_USER_POOLS
+            arn: ${env:COGNITO_ARN}
+          cors:
+            origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http: 
+          path: '/quotes/{proxy+}'
+          method: delete
+          authorizer:
+            type: COGNITO_USER_POOLS
+            arn: ${env:COGNITO_ARN}
+          cors:
+            origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+resources:
+  Resources:
+    UsersDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: userId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.usersTableName}
+    QuotesDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: quoteId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: quoteId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.quotesTableName}
