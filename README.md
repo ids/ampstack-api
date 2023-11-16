@@ -15,7 +15,7 @@ COGNITO_ARN=arn:aws:cognito-idp:us-east-1:XXXXXXXXXX
 ALLOW_ORIGIN=*
 ```
 
-Adjust __ALLOW_ORIGIN__ to suit your front-end environment.  Set __COGNITO_ARN__ to the user pool ARN established in the [ampstack-ui]() front-end.
+Adjust __ALLOW_ORIGIN__ to suit your front-end environment.  Set __COGNITO_ARN__ to the user pool ARN established in the [ampstack-ui](https://github.com/ids/ampstack-ui) front-end.
 
 #### Local DynamoDB
 
