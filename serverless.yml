@@ -53,7 +53,6 @@ provider:
   environment:
     USERS_TABLE: ${self:custom.usersTableName}
     QUOTES_TABLE: ${self:custom.quotesTableName}
-    COGNITO_ARN: ${env:COGNITO_ARN}
     ALLOW_ORIGIN: ${env:ALLOW_ORIGIN}
   deploymentPrefix: ampstack
 
@@ -66,7 +65,8 @@ functions:
           method: get
           authorizer:
             type: COGNITO_USER_POOLS
-            arn: ${env:COGNITO_ARN}
+            authorizerId:
+              Ref: ApiGatewayAuthorizer            
           cors:
             origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
             headers: # <-- Specify allowed headers
@@ -82,7 +82,8 @@ functions:
           method: post
           authorizer:
             type: COGNITO_USER_POOLS
-            arn: ${env:COGNITO_ARN}
+            authorizerId:
+              Ref: ApiGatewayAuthorizer            
           cors:
             origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
             headers: # <-- Specify allowed headers
@@ -98,7 +99,8 @@ functions:
           method: get
           authorizer:
             type: COGNITO_USER_POOLS
-            arn: ${env:COGNITO_ARN}
+            authorizerId:
+              Ref: ApiGatewayAuthorizer            
           cors:
             origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
             headers: # <-- Specify allowed headers
@@ -114,7 +116,8 @@ functions:
           method: post
           authorizer:
             type: COGNITO_USER_POOLS
-            arn: ${env:COGNITO_ARN}
+            authorizerId:
+              Ref: ApiGatewayAuthorizer            
           cors:
             origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
             headers: # <-- Specify allowed headers
@@ -130,7 +133,8 @@ functions:
           method: delete
           authorizer:
             type: COGNITO_USER_POOLS
-            arn: ${env:COGNITO_ARN}
+            authorizerId:
+              Ref: ApiGatewayAuthorizer            
           cors:
             origin: '${env:ALLOW_ORIGIN}' # <-- Specify allowed origin
             headers: # <-- Specify allowed headers
@@ -143,6 +147,20 @@ functions:
             allowCredentials: true
 resources:
   Resources:
+    ApiGatewayAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        AuthorizerResultTtlInSeconds: 300
+        Name: API_AUTH_cognito_authorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - ${env:COGNITO_ARN0}
+          - ${env:COGNITO_ARN1}
+#          ${env:COGNITO_ARN2}
+#          ${env:COGNITO_ARN3}
     UsersDynamoDBTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
