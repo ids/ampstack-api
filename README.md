@@ -1,6 +1,6 @@
 # AmpStack API
 
-This project is the `AmpStack API`, which is a __Serverless Framework__ based __Serverless ExpressJS REST API__ implemented with AWS __API Gateway__ and __Lambda__.  The front end is implemented in [AmpStack API](https://github.com/ids/ampstack-ui). See the other READMEs for more details.
+This project is the `AmpStack API`, which is a __Serverless Framework__ based __Serverless ExpressJS REST API__ implemented with AWS __API Gateway__ and __Lambda__.  The front end is implemented in [AmpStack UI](https://github.com/ids/ampstack-ui). See the other READMEs for more details.
 
 ### Serverless Environment Variables
 
